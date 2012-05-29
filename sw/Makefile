@@ -4,9 +4,9 @@ SOURCES		=	square_wave_gen.c
 CC				=	avr-gcc
 OBJCOPY		=	avr-objcopy
 MMCU			=	atmega328p
-DUDE_MMCU	= m328p
-DF_CPU		= 16000000UL
-OPTMZ			= -O2
+DUDE_MMCU	=	m328p
+DF_CPU		=	16000000UL
+OPTMZ			=	-O2
 
 CFLAGS=$(OPTMZ) -DF_CPU=$(DF_CPU) -mmcu=$(MMCU) -Wall
 
