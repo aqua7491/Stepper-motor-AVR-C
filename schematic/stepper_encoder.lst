@@ -1,0 +1,40 @@
+eeschema (2010-04-21 BZR 23xx)-stable  >> Creation date: Wed May 23 20:51:18 2012
+
+#Cmp ( order = Reference )
+| C1         100nF       
+| C2         100nF       
+| C3         3.3nF       
+| C4         100nF       
+| C5         100uF       
+| C6         100nF       
+| C7         1000uF      
+| D1         1N4148      
+| D2         LED         
+| D3         BYV27       
+| D4         BYV27       
+| D5         BYV27       
+| D6         BYV27       
+| D7         BYV27       
+| D8         BYV27       
+| D9         BYV27       
+| D10        BYV27       
+| IC1        L297        
+| IC2        L298        
+| JP1        4X Header   
+| M1         XBEE        
+| R1         10K         
+| R2         10K         
+| R3         10K         
+| R4         10K         
+| R5         8.2K        
+| R6         10K         
+| R7         22K         
+| R8         330         
+| R9         1 1W        
+| R10        1 1W        
+| R11        1 1W        
+| R12        1 1W        
+| RV1        2.2K        
+#End Cmp
+
+#End List
