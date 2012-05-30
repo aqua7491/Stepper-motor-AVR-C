@@ -1,6 +1,6 @@
 # AVR-GCC Makefile
-PROJECT = square_wave_gen
-SOURCES = square_wave_gen.c
+PROJECT = simple_clock_stepper_motor
+SOURCES = simple_clock_stepper_motor.c
 CC = avr-gcc
 OBJCOPY = avr-objcopy
 MMCU = atmega328p
