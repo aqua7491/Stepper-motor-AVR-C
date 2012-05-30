@@ -12,7 +12,7 @@ CFLAGS = $(OPTMZ) -DF_CPU=$(DF_CPU) -mmcu=$(MMCU) -Wall -Werror
 
 
 $(PROJECT).hex: $(PROJECT).out 
-	$(OBJCOPY) -j .text -O ihex -R .eeprom $(PROJECT).out $(PROJECT).hex
+	$(OBJCOPY) -j .text -O ihex -S -R .eeprom $(PROJECT).out $(PROJECT).hex
 
 $(PROJECT).out: $(SOURCES)
 	$(CC) $(CFLAGS) -I./ -o $(PROJECT).out $(SOURCES)
