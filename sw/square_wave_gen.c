@@ -1,10 +1,26 @@
 #include <avr/io.h>
 #include <util/delay.h>
+#include <inttypes.h>
+#include <stdlib.h>
 
 #define F_CPU 16000000UL 
 
+#define BAUDRATE 57600
+#define BAUD_PRESCALLER (((F_CPU / (BAUDRATE * 16UL))) - 1)
 
+//Declaration of our functions
+void USART_init(void);
+unsigned char USART_receive(void);
+void USART_send(unsigned char data);
+void USART_putstring(char* StringPtr);
 
+//String[] is in fact an array but when we put the text between the " " 
+//symbols the compiler threats it as a String and automatically puts 
+//the null termination character in the end of the text
+//char String[]="Hello world!!";
+char String[16];
+
+// Delay function, _delay_ms doesn't accept variables but constants
 void delay_ms(uint16_t count) {
   while(count--) {
     _delay_ms(1);
@@ -42,15 +58,18 @@ uint16_t ReadADC(uint8_t ADCchannel)
 
 int main (void)
 {
-  double delay;
-  int16_t adc_value;
+  uint16_t delay;
+  uint16_t adc_value;
+  
+  // Call the USART initialization code
+  USART_init();
  
-  // sense LEDs output mode
-  DDRD |= (1<<PD2);
+  // Set sense LEDs in output mode
+  DDRD |= (1<<PD3);
   DDRD |= (1<<PD4);
 
-  /* set output mode 
-   * PD5=clock, PD6=enable, PD7=cw/ccw */
+  // Set output mode of stepper driver pins
+  // PD5=clock, PD6=enable, PD7=cw/ccw
   DDRD |= (1<<PD5);
   DDRD |= (1<<PD6);
   DDRD |= (1<<PD7);
@@ -60,52 +79,85 @@ int main (void)
   PORTD |= (1<<PD6);
   PORTD |= (1<<PD7);
 
-  //initialize ADC
+  // initialize ADC
   InitADC();
 
   while (1) {
 
-      //reading potentiometer value
-      //adc_value = ReadADC(0);
+      // reading potentiometer value
+      // adc_value = ReadADC(0);
       adc_value = ADCW;
 
-      if ((adc_value > 700) || (adc_value < 300)) {
+      if ((adc_value > 611) || (adc_value < 412)) {
 
         // enable stepper driver
-        PORTD |= (1<<PD6);
+        PORTD |= (1 << PD6);
 
-        if (adc_value > 700) 
+        if (adc_value > 611) { 
           // sense of rotation, bit = 1
-          PORTD |= (1<<PD7);
+          PORTD |= (1 << PD7);
           // sense LEDs
-          PORTD |= (1<<PD2);
-          PORTD &= ~(1<<PD4);
+          PORTD |= (1 << PD3);
+          PORTD &= ~(1 << PD4);
+          delay = 9 - ((adc_value - 612) / 51);
+        }
 
-        if (adc_value < 300) 
+        if (adc_value < 412) {
           // invert sense of rotation, bit = 0
-          PORTD &= ~(1<<PD7);
+          PORTD &= ~(1 << PD7);
           // sense LEDs
-          PORTD &= ~(1<<PD2);
-          PORTD |= (1<<PD4);
+          PORTD &= ~(1 << PD3);
+          PORTD |= (1 << PD4);
+          delay = 1 + (adc_value / 51);
+        }
         
         // swap clock pin
-        PORTD ^= (1<<PD5);
-        delay_ms(8);
+        PORTD ^= (1 << PD5);
+
+        // convert integer to string 
+        itoa(delay, String, 10);
+        USART_putstring(String);
+
+        // delay
+        delay_ms(delay);
 
       } else {
-
-        // disable stepper driver
-        PORTD &= ~(1<<PD5);
-        PORTD &= ~(1<<PD6);
+        // Not in working range,
+        // disabling stepper driver
+        PORTD &= ~(1 << PD5);
+        PORTD &= ~(1 << PD6);
 
         // sense LEDs off
-        PORTD &= ~(1<<PD2);
-        PORTD &= ~(1<<PD4);
-        __no_operation();
+        PORTD &= ~(1 << PD3);
+        PORTD &= ~(1 << PD4);
       }
   }
-
   return 0;
 }
 
+void USART_init(void){
+ UBRR0H = (uint8_t)(BAUD_PRESCALLER>>8);
+ UBRR0L = (uint8_t)(BAUD_PRESCALLER);
+ UCSR0B = (1<<RXEN0)|(1<<TXEN0);
+ UCSR0C = (3<<UCSZ00);
+}
+
+unsigned char USART_receive(void){
+  while(!(UCSR0A & (1<<RXC0)));
+  return UDR0;
+}
+
+void USART_send(unsigned char data){
+  while(!(UCSR0A & (1<<UDRE0)));
+  UDR0 = data;
+}
+
+void USART_putstring(char* StringPtr){
+  while(*StringPtr != 0x00){
+    USART_send(*StringPtr);
+    StringPtr++;
+  }
+  
+  USART_send('\n');
+}
 

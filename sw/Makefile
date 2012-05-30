@@ -6,9 +6,9 @@ OBJCOPY = avr-objcopy
 MMCU = atmega328p
 DUDE_MMCU = m328p
 DF_CPU = 16000000UL
-OPTMZ = -O2
+OPTMZ = -Os
 
-CFLAGS = $(OPTMZ) -DF_CPU=$(DF_CPU) -mmcu=$(MMCU) -Wall
+CFLAGS = $(OPTMZ) -DF_CPU=$(DF_CPU) -mmcu=$(MMCU) -Wall -Werror
 
 
 $(PROJECT).hex: $(PROJECT).out 
