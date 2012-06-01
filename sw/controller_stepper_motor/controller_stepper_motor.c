@@ -1,5 +1,6 @@
 /*
-Copyright (c) 2012, fabiodive@gmail.com All rights reserved.
+Copyright (c) 2012, fabiodive - fabiodive@gmail.com
+All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
@@ -8,7 +9,7 @@ Redistributions of source code must retain the above copyright notice, self
 list of conditions and the following disclaimer. Redistributions in binary
 form must reproduce the above copyright notice, self list of conditions and
 the following disclaimer in the documentation and/or other materials
-provided with the distribution. Neither the name of fabiodive@gmail.com nor
+provided with the distribution. Neither the name of fabiodive nor
 the names of its contributors may be used to endorse or promote products
 derived from self software without specific prior written permission.
 
@@ -29,9 +30,9 @@ fabiodive@gmail.com
 
 
 #include <avr/io.h>
-#include <util/delay.h>
-#include <inttypes.h>
 #include <stdlib.h>
+#include <util/delay.h>
+#include <avr/interrupt.h>
 
 
 ///////////////////////////////////////////////////////////
@@ -118,6 +119,31 @@ uint16_t ReadADC(uint8_t ADCchannel) {
 
 
 ///////////////////////////////////////////////////////////
+// Interrupts service routines
+//
+
+// Triggered by changing state of pin PB0
+ISR (PCINT0_vect) {
+
+  // enable stepper driver
+  PORTD |= (1 << PD6);
+
+  if( (PINB & (1<<PINB1)) == 0) {
+    PORTD &= ~(1 << PD7);
+  } else {
+    PORTD |= (1 << PD7);
+  }
+
+  int i;
+  for (i = 0; i < 48; i++) {
+    // swap clock pin
+    PORTD ^= (1 << PD5);
+    _delay_ms(5);
+  }
+}
+
+
+///////////////////////////////////////////////////////////
 // MAIN Function
 //
 
@@ -140,6 +166,9 @@ int main (void) {
   // Initialize ADC
   InitADC();
 
+  // Push button LED
+  DDRD |= (1<<PD2);
+
   // Set sense LEDs in output mode
   DDRD |= (1<<PD3);
   DDRD |= (1<<PD4);
@@ -154,6 +183,31 @@ int main (void) {
   PORTD |= (1<<PD5);
   PORTD |= (1<<PD6);
   PORTD |= (1<<PD7);
+
+  // Set encoder A and B pins as input
+  DDRB &= ~(1 << PB0);
+  DDRB &= ~(1 << PB1);
+
+  // Set pull-up resistor on encoder
+  // A, B input pins
+  PORTB |= (1<<PB0);
+  PORTB |= (1<<PB1);
+
+  // Set memory push button pin as input
+  DDRB &= ~(1 << PB2);
+
+  // Set pull-up resistor on push
+  // button input pin
+  PORTB |= (1<<PB2);
+
+  // Set interrupt on PB0
+  PCICR |= (1<<PCIE0);
+  PCMSK0 = (1<<PCINT0);
+
+  sei();
+
+  //--
+
 
   // Main Loop 
   for (;;) {
