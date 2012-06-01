@@ -49,13 +49,16 @@ fabiodive@gmail.com
 
 // encoder conversion activation threshold
 // below it the interrupt get discharged
-#define TH_ENABLE 15
+#define TH_ENABLE 10
 
 // actual encoder steps
 volatile uint16_t encoder_steps = 0;
 
 // this toggle between 
 volatile uint8_t previous_dir = 0; 
+
+// memory buttons flag
+volatile uint8_t mem_buttons_flag = 0;
 
 uint16_t delay;
 
@@ -122,25 +125,28 @@ void InitADC() {
   // Select Vref=AVcc
   // Avcc(+5v) as voltage reference
   ADMUX |= (1<<REFS0);
-  ADMUX &= ~(1<<REFS1);
+  //ADMUX &= ~(1<<REFS1);
   // ADC in free-running  mode
-  ADCSRB &= ~((1<<ADTS2)|(1<<ADTS1)|(1<<ADTS0));
+  //ADCSRB &= ~((1<<ADTS2)|(1<<ADTS1)|(1<<ADTS0));
   // Signal source, in this case is the free-running
-  ADCSRA |= (1<<ADATE);
+  //ADCSRA |= (1<<ADATE);
   // Power up the ADC
   ADCSRA |= (1<<ADEN);
-  // Start converting
+  // Do a conversion
   ADCSRA |= (1<<ADSC);
 }
 
 uint16_t ReadADC(uint8_t ADCchannel) {
+  // Clear the channel selection
+  ADMUX &= 0xF0;
   // select ADC channel with safety mask
-  ADMUX = (ADMUX & 0xF0) | (ADCchannel & 0x0F);
+  // maximum selection: 0b1111
+  ADMUX |= (ADCchannel & 0x0F);
   // single conversion mode
   ADCSRA |= (1<<ADSC);
   // wait until ADC conversion is complete
   while( ADCSRA & (1<<ADSC) );
-  return ADC;
+  return ADCW;
 }
 
 
@@ -149,6 +155,7 @@ uint16_t ReadADC(uint8_t ADCchannel) {
 //
 
 // Triggered by changing state of pin PB0
+// Encoder phase A pin
 ISR (PCINT0_vect) {
 
  /* 
@@ -204,12 +211,14 @@ ISR (PCINT0_vect) {
       }
  
       // one motor step forward
-      uint8_t i;
-      for (i = 0; i < 4; i++) {
+      //uint8_t i;
+      //for (i = 0; i < 4; i++) {
         // swap clock pin
         PORTD ^= (1 << PD5);
         _delay_ms(1);
-      }
+        PORTD ^= (1 << PD5);
+        _delay_ms(1);
+      //}
       // I begin from 0 again to count
       encoder_steps = 0;
     }
@@ -228,6 +237,13 @@ ISR (PCINT0_vect) {
     // reset encoder counter
     encoder_steps = 0;
   }
+}
+
+
+// Triggered by changing state of pin PC1
+// Memory buttons
+ISR (PCINT1_vect) {
+  mem_buttons_flag = 1;
 }
 
 
@@ -271,81 +287,48 @@ int main (void) {
   PORTB |= (1<<PB1);
 
   // Set memory push button pin as input
-  DDRB &= ~(1 << PB2);
+  DDRC &= ~(1 << PC1);
 
   // Set pull-up resistor on push
   // button input pin
-  PORTB |= (1<<PB2);
+  PORTC |= (1<<PC1);
 
-  // Set interrupt on PB0
+  // Enable interrupt on PCI0 vector
   PCICR |= (1<<PCIE0);
-  PCMSK0 = (1<<PCINT0);
+  // Enable interrupt on PCI1 vector
+  PCICR |= (1<<PCIE1);
+  // Enable interrupt for PCINT0 - PB0
+  PCMSK0 |= (1<<PCINT0);
+  // Enable interrupt for PCINT9 - PC1
+  PCMSK1 |= (1<<PCINT9);
 
   // Enable interrupts
   sei();
 
   //--
 
-
   // Main Loop 
   for (;;) {
 
-    // reading potentiometer value
-    // adc_value = ReadADC(0);
-    adc_value = ADCW;
+    if ( mem_buttons_flag ) {
+      // reading potentiometer value
+      // for speed value
+      adc_value = ReadADC(0);
 
-    // I define two ranges where the stepper motor is enabled
-    if ((adc_value > 611) || (adc_value < 412)) {
-
-      // enable stepper driver
-      PORTD |= (1 << PD6);
-
-      // This is the higher range
-      if (adc_value > 611) { 
-        // sense of rotation, bit = 1
-        PORTD |= (1 << PD7);
-        // sense LEDs
-        PORTD |= (1 << PD3);
-        PORTD &= ~(1 << PD4);
-        
-        // OK integer trunked result during division
-        // are deci-millisecond
-        // The result is reverted.
-        delay = 9 - ((adc_value - 612) / 51);
+      if ( PINC & (1<<PC1) ) {
+      // do something
+      } else {
+        mem_buttons_flag = 0;
       }
-
-      // This is the lower range
-      if (adc_value < 412) {
-        // invert sense of rotation, bit = 0
-        PORTD &= ~(1 << PD7);
-        // sense LEDs
-        PORTD &= ~(1 << PD3);
-        PORTD |= (1 << PD4);
-
-        delay = 1 + (adc_value / 51);
-      }
-      
-      // swap clock pin
-      PORTD ^= (1 << PD5);
-
-      // convert integer delay to string 
-      //itoa(delay, String, 10);
-      // sending the value to the monitoring station
-      //USART_putstring(String);
-
-      // calling delay
-      delay_ms(delay);
-
-    // if here, not in enabled ranges
-    } else {
-      // disabling stepper driver
-      PORTD &= ~(1 << PD5);
-      PORTD &= ~(1 << PD6);
-
-      // sense LEDs off
-      PORTD &= ~(1 << PD3);
-      PORTD &= ~(1 << PD4);
     }
+
+    // disabling stepper driver
+    PORTD &= ~(1 << PD5);
+    PORTD &= ~(1 << PD6);
+
+    // sense LEDs off
+    PORTD &= ~(1 << PD3);
+    PORTD &= ~(1 << PD4);
   }
 
   return 0;
