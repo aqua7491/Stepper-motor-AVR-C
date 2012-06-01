@@ -44,8 +44,33 @@ fabiodive@gmail.com
 
 // USART
 #define BAUDRATE 57600
+// Set the clock for the desired baud rate
 #define BAUD_PRESCALLER (((F_CPU / (BAUDRATE * 16UL))) - 1)
 
+// encoder conversion activation threshold
+// below it the interrupt get discharged
+#define TH_ENABLE 15
+
+// actual encoder steps
+volatile uint16_t encoder_steps = 0;
+
+// this toggle between 
+volatile uint8_t previous_dir = 0; 
+
+uint16_t delay;
+
+// ADC converted value from potentiometer 
+// used for speed, 0 - 1023
+uint16_t adc_value;
+
+// String[] is in fact an array but when we put the text 
+// between the " " symbols the compiler threats it as a 
+// String and automatically puts the null termination 
+// character in the end of the text
+
+//char String[]="Hello world!!";
+//char String[16];
+ 
 
 ///////////////////////////////////////////////////////////
 // Functions declaration
@@ -78,11 +103,12 @@ void USART_putstring(char* StringPtr){
     StringPtr++;
   }
   // Newline for pc serial monitoring
+  USART_send('\r');
   USART_send('\n');
 }
 
 // Delay function, canonical _delay_ms 
-// doesn't accept variables but constants
+// doesn't accept variables but just constants
 void delay_ms(uint16_t count) {
   while(count--) {
     _delay_ms(1);
@@ -125,20 +151,82 @@ uint16_t ReadADC(uint8_t ADCchannel) {
 // Triggered by changing state of pin PB0
 ISR (PCINT0_vect) {
 
-  // enable stepper driver
-  PORTD |= (1 << PD6);
+ /* 
+ 
+ Those marked with * are the needed conditions
 
-  if( (PINB & (1<<PINB1)) == 0) {
-    PORTD &= ~(1 << PD7);
+ *if two bits are equals and previous_dir = 0
+    same direction as before
+
+  if two bits are equals and previous_dir = 1
+    new direction is opposite
+
+  if two bits are differents and previous_dir = 0
+    new direction is opposite
+
+ *if two bits are differents and previous_dir = 1
+    same direction as before
+
+ */
+
+  uint8_t phase_a;
+  uint8_t phase_b;
+
+  phase_a = (PINB & (1<<PB0));
+  phase_b = (PINB & (1<<PB1)) >>1;
+
+  /*
+  USART_send(phase_a+48);
+  USART_send('-');
+  USART_send(phase_b+48);
+  USART_send('-');
+  USART_send(previous_dir+48);
+  USART_send('-');
+  USART_send(encoder_steps+48);
+  USART_send('\r');
+  USART_send('\n');
+  */
+
+  // if actual direction is equal to the previous
+  if ( !((phase_a ^ phase_b) ^ previous_dir) ) {
+    encoder_steps++;
+    // This way we should be sure, a real encoder
+    // rotation is begun
+    if ( encoder_steps > TH_ENABLE ) {
+      // enable stepper driver
+      PORTD |= (1 << PD6);
+      if (phase_a == phase_b) {
+        PORTD &= ~(1 << PD3);
+        PORTD |= (1 << PD4);
+      } else {
+        PORTD |= (1 << PD3);
+        PORTD &= ~(1 << PD4);
+      }
+ 
+      // one motor step forward
+      uint8_t i;
+      for (i = 0; i < 4; i++) {
+        // swap clock pin
+        PORTD ^= (1 << PD5);
+        _delay_ms(1);
+      }
+      // I begin from 0 again to count
+      encoder_steps = 0;
+    }
+  // Not over the threshold, this interrupt was the beginning of a
+  // opposite encoder rotation or not a real command
   } else {
-    PORTD |= (1 << PD7);
-  }
-
-  int i;
-  for (i = 0; i < 48; i++) {
-    // swap clock pin
-    PORTD ^= (1 << PD5);
-    _delay_ms(5);
+    // Toggle the direction of rotation
+    // on stepper motor driver pin
+    PORTD ^= (1 << PD7);
+    // and the memory flag aswell
+    if (previous_dir == 0) {
+      previous_dir = 1;
+    } else {
+      previous_dir = 0;
+    }
+    // reset encoder counter
+    encoder_steps = 0;
   }
 }
 
@@ -149,17 +237,6 @@ ISR (PCINT0_vect) {
 
 int main (void) {
 
-  uint16_t delay;
-  uint16_t adc_value;
-
-  // String[] is in fact an array but when we put the text 
-  // between the " " symbols the compiler threats it as a 
-  // String and automatically puts the null termination 
-  // character in the end of the text
- 
-  //char String[]="Hello world!!";
-  char String[16];
- 
   // Call the USART initialization code
   USART_init();
  
@@ -204,6 +281,7 @@ int main (void) {
   PCICR |= (1<<PCIE0);
   PCMSK0 = (1<<PCINT0);
 
+  // Enable interrupts
   sei();
 
   //--
@@ -251,9 +329,9 @@ int main (void) {
       PORTD ^= (1 << PD5);
 
       // convert integer delay to string 
-      itoa(delay, String, 10);
+      //itoa(delay, String, 10);
       // sending the value to the monitoring station
-      USART_putstring(String);
+      //USART_putstring(String);
 
       // calling delay
       delay_ms(delay);
