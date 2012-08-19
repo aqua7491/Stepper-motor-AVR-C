@@ -1,0 +1,147 @@
+eeschema (2010-04-21 BZR 23xx)-stable  >> Creation date: Sun Aug 19 13:18:47 2012
+
+#Cmp ( order = Reference )
+| C1         100nF       
+| C2         100nF       
+| C3         100nF       
+| C4         100nF       
+| C5         C           
+| C6         C           
+| C7         100nF       
+| C8         CP          
+| D1         LED         
+| D2         LED         
+| D3         DIODE       
+| D4         LED         
+| D5         LED         
+| D6         LED         
+| D7         LED         
+| D8         LED         
+| D9         LED         
+| D10        LED         
+| D11        LED         
+| D12        LED         
+| D13        LED         
+| D14        LED         
+| D15        LED         
+| D16        LED         
+| D17        LED         
+| D18        LED         
+| D19        LED         
+| D20        LED         
+| IC1        ATMEGA328-P 
+| IC2        74LS14N     
+| K1         DRIVER      
+| L1         INDUCTOR    
+| P1         CONN_3X2    
+| P2         Serial Cable
+| P3         CONN_1      
+| P4         CONN_1      
+| P5         CONN_1      
+| P6         CONN_1      
+| Q1         2N2222A     
+| R1         10K         
+| R2         R           
+| R3         R           
+| R4         R           
+| R5         2K7         
+| R6         10K         
+| R7         2K2         
+| R8         58K         
+| R9         330         
+| R10        330         
+| R11        330         
+| R12        330         
+| R13        330         
+| R14        330         
+| R15        330         
+| R16        330         
+| R17        330         
+| R18        330         
+| R19        330         
+| R20        330         
+| R21        330         
+| R22        330         
+| R23        330         
+| R24        330         
+| R25        330         
+| RV1        1K          
+| SP1        SPEAKER     
+| SW1        SW_PUSH     
+| U1         TLC5940     
+| X1         16.0 MHz    
+#End Cmp
+
+#Cmp ( order = Value )
+| 100nF        C1        
+| 100nF        C2        
+| 100nF        C3        
+| 100nF        C4        
+| 100nF        C7        
+| 10K          R1        
+| 10K          R6        
+| 16.0 MHz     X1        
+| 1K           RV1       
+| 2K2          R7        
+| 2K7          R5        
+| 2N2222A      Q1        
+| 330          R9        
+| 330          R10       
+| 330          R11       
+| 330          R12       
+| 330          R13       
+| 330          R14       
+| 330          R15       
+| 330          R16       
+| 330          R17       
+| 330          R18       
+| 330          R19       
+| 330          R20       
+| 330          R21       
+| 330          R22       
+| 330          R23       
+| 330          R24       
+| 330          R25       
+| 58K          R8        
+| 74LS14N      IC2       
+| ATMEGA328-P  IC1       
+| C            C5        
+| C            C6        
+| CONN_1       P3        
+| CONN_1       P4        
+| CONN_1       P5        
+| CONN_1       P6        
+| CONN_3X2     P1        
+| CP           C8        
+| DIODE        D3        
+| DRIVER       K1        
+| INDUCTOR     L1        
+| LED          D1        
+| LED          D2        
+| LED          D4        
+| LED          D5        
+| LED          D6        
+| LED          D7        
+| LED          D8        
+| LED          D9        
+| LED          D10       
+| LED          D11       
+| LED          D12       
+| LED          D13       
+| LED          D14       
+| LED          D15       
+| LED          D16       
+| LED          D17       
+| LED          D18       
+| LED          D19       
+| LED          D20       
+| R            R2        
+| R            R3        
+| R            R4        
+| Serial Cable P2        
+| SPEAKER      SP1       
+| SW_PUSH      SW1       
+| TLC5940      U1        
+#End Cmp
+
+#End List
