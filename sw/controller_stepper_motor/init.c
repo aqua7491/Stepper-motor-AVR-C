@@ -29,22 +29,20 @@ fabiodive@gmail.com
 */
 
 
+//#include <avr/io.h>
+//#include <stdlib.h>
+//#include <avr/interrupt.h>
+#include "pins.h"
+
 
 ///////////////////////////////////////////////////////////
-// PINs declaration
+// Initialization of each pin as INPUT or OUTPUT
 //
 
-// Encoder PINs
-#define ENCPHA PB0 // phase_a
-#define ENCPHB PB1 // phase_b
 
-// Driver BUS
-#define BUSCLOCK PD5 // Clock
-#define BUSENABLE PD6 // Enable
-#define BUSSENSE PD7 // CW/CCW sense
 
-// Sense LEDs
-#define LEDCW PD3 // CW
-#define LEDCCW PD4 // CCW
+///////////////////////////////////////////////////////////
+// Initialization of Interrupts Vectors
+//
 
 

@@ -1,7 +1,5 @@
-update=Sat Aug 18 11:45:06 2012
-last_client=eeschema
-[general]
-version=1
+update=Sun Aug 19 14:50:24 2012
+last_client=kicad
 [eeschema]
 version=1
 LibDir=
@@ -70,3 +68,5 @@ LibName29=contrib
 LibName30=valves
 LibName31=arduino_uno_r3_compatible-cache
 LibName32=numato_kicad_lib
+[general]
+version=1
